@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dossiê Financeiro - Mercearia</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1a252f;    /* Azul Petróleo Escuro */
+            --accent: #2980b9;     /* Azul Brilhante */
+            --success: #27ae60;    /* Verde Sucesso */
+            --warning: #f39c12;    /* Laranja Alerta */
+            --danger: #c0392b;     /* Vermelho Erro */
+            --light: #ecf0f1;      /* Cinza Claro */
+            --white: #ffffff;
+        }
+
+        body { 
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; 
+            background: #e9ecef; 
+            color: #333; 
+            margin: 0; 
+            padding: 30px; 
+            line-height: 1.6;
+        }
+
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: var(--white); 
+            padding: 50px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            border-radius: 12px; 
+        }
+
+        /* --- CABEÇALHO --- */
+        header { 
+            text-align: center; 
+            border-bottom: 4px solid var(--accent); 
+            padding-bottom: 30px; 
+            margin-bottom: 40px; 
+        }
+        header h1 { 
+            margin: 0; 
+            font-size: 2.4rem; 
+            color: var(--primary); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        header .subtitle { 
+            font-size: 1.2rem; 
+            color: #7f8c8d; 
+            margin-top: 5px; 
+            font-weight: 300;
+        }
+        .consultants-box {
+            margin-top: 20px;
+            background: var(--light);
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* --- SEÇÕES --- */
+        .section-title { 
+            display: flex; 
+            align-items: center; 
+            color: var(--primary); 
+            font-size: 1.5rem; 
+            margin-top: 50px; 
+            margin-bottom: 25px; 
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .section-title span {
+            background: var(--accent);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        /* --- CARDS KPI --- */
+        .kpi-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        .kpi-card { 
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center; 
+            border: 1px solid #eee; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .kpi-card h4 { margin: 0 0 10px 0; font-size: 0.8rem; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-card .value { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+        .kpi-card .obs { font-size: 0.75rem; color: #bdc3c7; margin-top: 5px; }
+
+        /* --- LAYOUT GRÁFICOS --- */
+        .split-view { display: flex; gap: 30px; align-items: flex-start; margin-bottom: 30px; }
+        .half { flex: 1; }
+        .chart-container { position: relative; height: 300px; width: 100%; background: #fff; }
+        
+        /* Ajuste para gráficos de margem ficarem mais altos se necessário */
+        .chart-margin-container { position: relative; height: 350px; width: 100%; background: #fff; }
+
+        /* --- CENÁRIOS --- */
+        .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .scenario-card { background: #f8f9fa; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef; }
+        .scenario-card h3 { text-align: center; color: var(--primary); margin-top: 0; font-size: 1.1rem; }
+        .scenario-footer { margin-top: 15px; text-align: center; font-size: 0.9rem; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+
+        /* --- TABELA --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; border-radius: 8px; overflow: hidden; }
+        thead { background: var(--primary); color: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #f1f1f1; }
+
+        /* --- IMPRESSÃO --- */
+        .print-btn { 
+            display: block; 
+            margin: 0 auto 30px; 
+            padding: 15px 40px; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 50px; 
+            font-size: 16px; 
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(41, 128, 185, 0.4);
+            transition: 0.3s; 
+        }
+        .print-btn:hover { background: #1f618d; transform: scale(1.02); }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; margin: 0; }
+            .print-btn { display: none; }
+            .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+            .section-title { margin-top: 30px; font-size: 1.3rem; }
+            .chart-container, .chart-margin-container { height: 250px !important; }
+            .kpi-card { border: 1px solid #ccc; padding: 10px; }
+            .scenario-grid { page-break-inside: avoid; }
+            tr { page-break-inside: avoid; }
+            .split-view { display: block; } /* Empilhar na impressão se necessário */
+            .half { width: 100%; margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+
+<div class="container">
+    
+    <header>
+        <h1>Resultado Financeiro & Estratégico</h1>
+        <div class="subtitle">Consultoria Menu de Sucesso - Novembro 2025</div>
+        <div class="consultants-box">
+            Consultores: Paula Karine, Ana Maria e Hugo Diniz
+        </div>
+    </header>
+
+    <h2 class="section-title"><span>1</span> Diagnóstico de Custos Operacionais</h2>
+    
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <h4>Total Despesas Fixas</h4>
+            <div class="value" style="color: var(--danger);">R$ 29.583</div>
+            <div class="obs">Mensal (3 Unidades)</div>
+        </div>
+        <div class="kpi-card">
+            <h4>Produção Central</h4>
+            <div class="value">55%</div>
+            <div class="obs">Do custo total</div>
+        </div>
+        <div class="kpi-card">
+            <h4>Restaurante Hosp.</h4>
+            <div class="value">35%</div>
+            <div class="obs">Do custo total</div>
+        </div>
+        <div class="kpi-card">
+            <h4>Açaí Hosp.</h4>
+            <div class="value">10%</div>
+            <div class="obs">Do custo total</div>
+        </div>
+    </div>
+
+    <div class="split-view">
+        <div class="half">
+            <h4 style="text-align: center; color: #7f8c8d;">Distribuição por Unidade</h4>
+            <div class="chart-container">
+                <canvas id="chartFiliais"></canvas>
+            </div>
+        </div>
+        <div class="half">
+            <h4 style="text-align: center; color: #7f8c8d;">Top 5 Maiores Gastos (Pareto)</h4>
+            <div class="chart-container">
+                <canvas id="chartDespesas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title"><span>2</span> Metas & Indicadores 2026</h2>
+    <p style="margin-bottom: 20px; color: #666;">Baseado na análise de margem dos produtos principais, definimos as metas para sustentabilidade do negócio.</p>
+
+    <div class="kpi-grid">
+        <div class="kpi-card" style="border-color: var(--warning);">
+            <h4>Ponto de Equilíbrio</h4>
+            <div class="value" style="color: var(--warning);">R$ 44.293</div>
+            <div class="obs">Meta de Faturamento Mensal</div>
+        </div>
+        <div class="kpi-card">
+            <h4>Margem Média</h4>
+            <div class="value" style="color: var(--success);">66,8%</div>
+            <div class="obs">Lucro Bruto Médio</div>
+        </div>
+        <div class="kpi-card">
+            <h4>Ticket Médio Est.</h4>
+            <div class="value">R$ 17,92</div>
+            <div class="obs">Produtos Analisados</div>
+        </div>
+        <div class="kpi-card">
+            <h4>Meta Diária</h4>
+            <div class="value">R$ 1.480</div>
+            <div class="obs">Vendas p/ cobrir custos</div>
+        </div>
+    </div>
+
+    <h2 class="section-title"><span>3</span> Plano de Ação: Engenharia de Menu</h2>
+    <p>Sugestões para aumento de ticket médio e volume através de combos estratégicos.</p>
+
+    <div class="scenario-grid">
+        <div class="scenario-card">
+            <h3>🅰️ Estratégia "Pão Família"</h3>
+            <p style="font-size: 0.9rem; color: #666; text-align: center;">Venda de Pão Carne de Sol (R$ 68) + <strong>Refri Grátis</strong></p>
+            <div class="chart-container" style="height: 200px;">
+                <canvas id="chartPaoBig"></canvas>
+            </div>
+            <div class="scenario-footer">
+                <span class="badge badge-success">VIÁVEL</span>
+                <p>Lucro líquido cai apenas R$ 3,50.<br>Alto valor percebido pelo cliente.</p>
+            </div>
+        </div>
+
+        <div class="scenario-card">
+            <h3>🅱️ Estratégia "Lanche Rápido"</h3>
+            <p style="font-size: 0.9rem; color: #666; text-align: center;">Mini Pão (R$ 12) + <strong>Suco</strong> (Preço mantido)</p>
+            <div class="chart-container" style="height: 200px;">
+                <canvas id="chartMiniPao"></canvas>
+            </div>
+            <div class="scenario-footer">
+                <span class="badge badge-info">META DE VOLUME</span>
+                <p>Necessário aumentar vendas em <strong>12,6%</strong>.<br>Ideal para girar estoque.</p>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title"><span>4</span> Ranking Visual de Lucratividade</h2>
+    <p style="margin-bottom: 20px;">Comparativo visual para identificar produtos com maior eficiência (%) e maior retorno financeiro (R$).</p>
+    
+    <div class="split-view">
+        <div class="half">
+            <h4 style="text-align: center; color: var(--accent);">Ranking por Margem (%)</h4>
+            <p style="text-align: center; font-size: 0.8rem; color: #999;">Eficiência: Quanto sobra de cada venda</p>
+            <div class="chart-margin-container">
+                <canvas id="chartMargemPerc"></canvas>
+            </div>
+        </div>
+        <div class="half">
+            <h4 style="text-align: center; color: var(--success);">Ranking por Valor (R$)</h4>
+            <p style="text-align: center; font-size: 0.8rem; color: #999;">Caixa: Quanto dinheiro entra no bolso</p>
+            <div class="chart-margin-container">
+                <canvas id="chartMargemValor"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title"><span>5</span> Tabela Detalhada de Produtos</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Preço Venda</th>
+                <th>Custo Total*</th>
+                <th>Margem R$</th>
+                <th>Margem %</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+    <p style="font-size: 0.8rem; color: #999; margin-top: 10px; text-align: right;">*Custo Total inclui CMV + Impostos (Simples Nacional) + Taxas Financeiras (aprox. 7,4%)</p>
+
+</div>
+
+<script>
+    // --- 1. DADOS DE CUSTOS (REPORT 1) ---
+    const dadosFiliais = [16337.42, 10193.00, 3053.00];
+    const labelsFiliais = ['Ponto de Produção', 'Restaurante S. Marcos', 'Açaí S. Marcos'];
+
+    // Top Despesas
+    const dadosDespesas = [
+        {label: 'Salários + Encargos', valor: 13494}, 
+        {label: 'Aluguel (Total)', valor: 4942},
+        {label: 'Empréstimo', valor: 4400},
+        {label: 'Energia/Água', valor: 2990},
+        {label: 'Diarista', valor: 1600}
+    ];
+
+    // --- 2. DADOS DE PRODUTOS (REPORT 2) ---
+    const impostos = 0.074; // 7.4%
+    const produtos = [
+        {nome: 'Coxinha G', venda: 14.00, custo: 1.43},
+        {nome: 'Bolo de Pote', venda: 12.00, custo: 2.71},
+        {nome: 'Sanduíche B.R.O bró', venda: 12.00, custo: 3.34},
+        {nome: 'Pastel Forno Frango', venda: 12.00, custo: 4.10},
+        {nome: 'Cheescake', venda: 14.00, custo: 4.10},
+        {nome: 'Carne (c/ torradas)', venda: 15.00, custo: 4.38},
+        {nome: 'Macarronada Bolonhesa', venda: 18.00, custo: 10.29},
+        {nome: 'Pão Rech. Carne Sol', venda: 68.00, custo: 12.93},
+        {nome: 'Mini Pão Rech.', venda: 12.00, custo: 2.15}
+    ];
+
+    // Cálculos
+    produtos.forEach(p => {
+        p.taxaValor = p.venda * impostos;
+        p.margem = p.venda - p.custo - p.taxaValor;
+        p.margemPerc = (p.margem / p.venda) * 100;
+    });
+
+    // --- RENDERIZAÇÃO GRÁFICOS INICIAIS ---
+
+    // Gráfico 1: Filiais (Pizza)
+    new Chart(document.getElementById('chartFiliais'), {
+        type: 'doughnut',
+        data: {
+            labels: labelsFiliais,
+            datasets: [{
+                data: dadosFiliais,
+                backgroundColor: ['#2c3e50', '#2980b9', '#3498db']
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } } 
+        }
+    });
+
+    // Gráfico 2: Despesas (Barra Horizontal)
+    new Chart(document.getElementById('chartDespesas'), {
+        type: 'bar',
+        data: {
+            labels: dadosDespesas.map(d => d.label),
+            datasets: [{
+                label: 'Custo Mensal (R$)',
+                data: dadosDespesas.map(d => d.valor),
+                backgroundColor: '#c0392b',
+                borderRadius: 4
+            }]
+        },
+        options: { 
+            indexAxis: 'y', 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } } 
+        }
+    });
+
+    // Gráfico 3: Cenário A (Pão Big)
+    new Chart(document.getElementById('chartPaoBig'), {
+        type: 'bar',
+        data: {
+            labels: ['Só Pão', 'Combo (+Refri)'],
+            datasets: [
+                { label: 'Custo', data: [12.93, 16.43], backgroundColor: '#e74c3c' },
+                { label: 'Lucro', data: [50.04, 46.54], backgroundColor: '#27ae60' }
+            ]
+        },
+        options: { 
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+        }
+    });
+
+    // Gráfico 4: Cenário B (Mini Pão)
+    new Chart(document.getElementById('chartMiniPao'), {
+        type: 'bar',
+        data: {
+            labels: ['Só Mini', 'Combo (+Suco)'],
+            datasets: [
+                { label: 'Custo', data: [2.15, 3.15], backgroundColor: '#e74c3c' },
+                { label: 'Lucro', data: [8.96, 7.96], backgroundColor: '#3498db' }
+            ]
+        },
+        options: { 
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+        }
+    });
+
+    // --- NOVOS GRÁFICOS DE MARGEM ---
+
+    // Preparar dados ordenados para cada gráfico
+    
+    // 1. Ordenar por Porcentagem (Copia do array)
+    const sortedByPerc = [...produtos].sort((a, b) => b.margemPerc - a.margemPerc);
+    
+    new Chart(document.getElementById('chartMargemPerc'), {
+        type: 'bar',
+        data: {
+            labels: sortedByPerc.map(p => p.nome),
+            datasets: [{
+                label: 'Margem (%)',
+                data: sortedByPerc.map(p => p.margemPerc),
+                backgroundColor: '#2980b9',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Barra Horizontal para caber os nomes
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, max: 100 } }
+        }
+    });
+
+    // 2. Ordenar por Valor (Copia do array)
+    const sortedByValue = [...produtos].sort((a, b) => b.margem - a.margem);
+
+    new Chart(document.getElementById('chartMargemValor'), {
+        type: 'bar',
+        data: {
+            labels: sortedByValue.map(p => p.nome),
+            datasets: [{
+                label: 'Margem (R$)',
+                data: sortedByValue.map(p => p.margem),
+                backgroundColor: '#27ae60',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+
+
+    // --- TABELA ---
+    // Usar a ordenação padrão (por %) para a tabela
+    const tbody = document.getElementById('tableBody');
+    // Reordenar a lista original para a tabela se necessário (já estava sorted no código anterior, mas garantindo)
+    produtos.sort((a, b) => b.margemPerc - a.margemPerc);
+
+    produtos.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${p.nome}</strong></td>
+            <td>R$ ${p.venda.toFixed(2)}</td>
+            <td>R$ ${(p.custo + p.taxaValor).toFixed(2)}</td>
+            <td style="color: var(--success); font-weight:bold;">R$ ${p.margem.toFixed(2)}</td>
+            <td>${p.margemPerc.toFixed(1)}%</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+</script>
+
+</body>
+</html>
